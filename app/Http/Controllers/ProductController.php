@@ -3,59 +3,46 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Product;//add model
+use App\Models\Product;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File;
 
 
 class ProductController extends Controller
 {
-    //
-    // FOR MAIN PAGE
     function index()
     {
-        // FETCH THE DATA
         $products = product::orderBy('created_at','desc')->get();
         // 
         return view('products.index',['products' => $products]); 
     }
-    // WHEN WE CLICK ON CREATE
     function create()
     {
         return view('products.create'); 
     }
-    // WHEN WE SUBMIT THE CREATE SUMBIT BUTTON
     function store(Request $request)
     {
-        // FORM VALIDATION
         $validator = Validator::make($request->all(),[
             'name'=>'required | min:3',
-            'sku'=>'required | unique:products,sku',//unique|table_name|column_name
+            'sku'=>'required | unique:products,sku',
             'price'=>'required | numeric',
             'status'=>'required',
-            // image should be image and accepted type is jpeg,png,jpg and max size is 2mb
             'image'=>'image | mimes:jpeg,png,jpg | max:2048',
         ]);
 
         if($validator->fails())
         {   
-            // if validator fails then
-            // redirect():- redirect to this route 
-            // withErrors():- to display errors
-            // withInput():- do not clear input value if error comes
             return redirect(route('products.create'))->withErrors($validator)->withInput();
         }
 
-        // MODEL:- for db connection
         $product = new Product();
         $product->name = $request->name;
         $product->sku = $request->sku;
         $product->price = $request->price;
         $product->status = $request->status;
-        $product->save();//to save the product
+        $product->save();
 
-        // ADD IMAGE
-        if($request->hasFile('image'))//To check that user selected an image or not
+        if($request->hasFile('image'))
         {
             $image = $request->image;//get the image
             $imageName = time().'.'.$image->getClientOriginalExtension();//return the image name with extension (12315.jpg)
